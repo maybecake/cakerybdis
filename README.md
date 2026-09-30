@@ -1,6 +1,8 @@
 [![.github/workflows/build.yml](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml/badge.svg)](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml)
 
 > **Fork notice:** this is a personal fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware) with a custom keymap, Bluetooth pairing fixes, trackball orientation changes and a no-DC/DC build variant for faulty nice!nanos. See **[FORK.md](FORK.md)** for every change, one commit per feature. The rest of this README is upstream's documentation.
+>
+> **Dependencies are forked and pinned.** All the firmware source this repo downloads at build time comes from `cakerybdis-` forks on my account, each pinned to an exact commit in [`config/west.yml`](config/west.yml): [ZMK](https://github.com/maybecake/cakerybdis-zmk) (with a split-disconnect fix), the [PMW3610 trackball driver](https://github.com/maybecake/cakerybdis-zmk-pmw3610-driver) and the [Prospector module](https://github.com/maybecake/cakerybdis-prospector-zmk-module). See [FORK.md → Dependencies](FORK.md#dependencies) for what each fork contains and how to update it.
 
 ## Intro
 

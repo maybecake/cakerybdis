@@ -9,6 +9,7 @@ Cakerybdis is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://git
 | 3 | [Trackball orientation](#3-trackball-orientation) | `boards/shields/charybdis_trackball/charybdis_pmw3610.dtsi` |
 | 4 | [Corne-style qwerty keymap](#4-corne-style-qwerty-keymap) | `config/keymaps/qwerty.keymap`, `config/_qwerty_dev.keymap` |
 | 5 | [No-DC/DC variant for a faulty nice!nano](#5-no-dcdc-variant-for-a-faulty-nicenano) | `config/no_dcdc/`, `build.yaml`, `.github/workflows/build.yml`, `local-build/build_setup.sh` |
+| 6 | [Forked + pinned dependencies](#dependencies) | `config/west.yml` |
 
 ---
 
@@ -75,6 +76,73 @@ One nice!nano in a batch had a broken DC/DC regulator, so ZMK never started on i
 To support the naming, this commit adds an `artifact_suffix` field to `build.yaml` entries. Both the GitHub Actions workflow and the local Docker build append it to output filenames (`charybdis_right_bt_no_dcdc.uf2`).
 
 The full write-up covers the symptoms, the trade-offs, the build toggle and the debugging steps. See **[config/no_dcdc/README.md](config/no_dcdc/README.md)**.
+
+---
+
+## Dependencies
+
+This repo only holds configuration. The firmware source (ZMK, Zephyr, the trackball driver and the Prospector module) is downloaded at build time by [west](https://docs.zephyrproject.org/latest/develop/west/index.html), as listed in [`config/west.yml`](config/west.yml). To make sure the keyboard always builds from code under my control:
+
+- every external repo is **forked** to my account with a `cakerybdis-` prefix, and
+- every project is **pinned to an exact commit SHA** instead of a branch, so a build next year produces the same firmware as today.
+
+| west project | Fork (built from) | Forked from | Pinned commit | Branch | Local changes |
+|---|---|---|---|---|---|
+| `zmk` | [maybecake/cakerybdis-zmk](https://github.com/maybecake/cakerybdis-zmk) | [zmkfirmware/zmk](https://github.com/zmkfirmware/zmk) | `8e99aa8f` | `cakerybdis` | Split-central disconnect fix + Zephyr pin (see below) |
+| `zmk-pmw3610-driver` | [maybecake/cakerybdis-zmk-pmw3610-driver](https://github.com/maybecake/cakerybdis-zmk-pmw3610-driver) | [280Zo/zmk-pmw3610-driver](https://github.com/280Zo/zmk-pmw3610-driver) (itself from [badjeff](https://github.com/badjeff/zmk-pmw3610-driver)) | `f6e23436` | `main` | None. Includes 280Zo's cursor-jump-on-wake patch. |
+| `prospector-zmk-module` | [maybecake/cakerybdis-prospector-zmk-module](https://github.com/maybecake/cakerybdis-prospector-zmk-module) | [280Zo/prospector-zmk-module](https://github.com/280Zo/prospector-zmk-module) | `45f174c6` | `main` | None. Only used by Prospector dongle builds. |
+| `zephyr` (+ HALs) | not forked: [zmkfirmware/zephyr](https://github.com/zmkfirmware/zephyr) | — | `10ba6d0c` | — | Pinned from inside `cakerybdis-zmk`'s `app/west.yml`. Zephyr's own modules (hal_nordic etc.) are pinned by Zephyr's manifest. |
+
+The project `name`s in `west.yml` (`zmk`, `zmk-pmw3610-driver`, `prospector-zmk-module`) must stay the same, because the build script and CI use them as folder names. `repo-path:` is what points each one at its `cakerybdis-*` repo.
+
+### Changes in `cakerybdis-zmk`
+
+The `cakerybdis` branch is upstream ZMK `9ebbeff0` (2026-09-14) plus two commits:
+
+1. **`fix(split): ignore host disconnects in split central disconnect handler`**. `split_central_disconnected()` is a global connection callback, so it also fired when the *host* disconnected. That tore down split state for no reason. It now returns early unless this device is the BLE central on that connection. It was originally a local edit made while debugging Bluetooth pairing, and every firmware since v7 was built with it.
+2. **`chore(west): pin zephyr to 10ba6d0cb38b`**. ZMK tracks the `v4.1.0+zmk-fixes` branch of its Zephyr fork, and this pins the exact commit the firmware was tested with.
+
+### Updating a dependency
+
+Every update is a deliberate commit to `config/west.yml` (plus the fork), so it can be reverted in one step if a build breaks.
+
+**Trackball driver or Prospector module** (plain forks, no local changes):
+
+```bash
+# 1. Sync the fork with its upstream (or click "Sync fork" on GitHub)
+gh repo sync maybecake/cakerybdis-zmk-pmw3610-driver --source 280Zo/zmk-pmw3610-driver
+
+# 2. Get the new commit SHA
+gh api repos/maybecake/cakerybdis-zmk-pmw3610-driver/commits/main --jq .sha
+
+# 3. Put that SHA in the project's `revision:` in config/west.yml, update the
+#    date/subject comment above it, then build, flash, test and commit.
+```
+
+**ZMK** (fork with local commits on the `cakerybdis` branch):
+
+```bash
+cd zmk                                          # west's checkout
+git remote add upstream https://github.com/zmkfirmware/zmk.git   # once
+git remote add fork https://github.com/maybecake/cakerybdis-zmk.git  # once
+git fetch upstream main
+git switch cakerybdis
+git rebase upstream/main          # replays the 2 cakerybdis commits on new ZMK
+```
+
+- If upstream's `app/west.yml` changed the Zephyr revision, update the pinned SHA in the Zephyr-pin commit to the current head of that branch: `gh api repos/zmkfirmware/zephyr/commits/<branch> --jq .sha`.
+- If upstream fixed the disconnect bug itself, drop that commit during the rebase.
+
+```bash
+git push --force-with-lease fork cakerybdis
+git rev-parse HEAD                # -> new `revision:` for zmk in config/west.yml
+```
+
+Then run a normal build (`west update` runs automatically), flash, test and commit `config/west.yml`.
+
+> Run a **plain** `west update`, without project names, after changing ZMK's pin. West can only update Zephyr and the other projects that ZMK brings in through a full update.
+
+**Adding another external module:** fork it as `cakerybdis-<name>`, add a project with `remote: maybecake`, `repo-path: cakerybdis-<name>` and a SHA `revision:`, and add it to the table above.
 
 ---
 
