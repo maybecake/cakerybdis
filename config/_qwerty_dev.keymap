@@ -98,10 +98,10 @@
         MAC {
             display-name = "Mac";
             bindings = <
-    &kp ESC             &kp Q   &kp W            &ht_left LCTRL E  &kp R             &kp T        &kp Y   &kp U              &ht_right RCTRL I  &kp O             &kp P           &kp BSLH
-    &kp TAB             &kp A   &ht_left LALT S  &ht_left LCMD D   &ht_left LSHFT F  &kp G        &kp H   &ht_right RSHFT J  &ht_right RCMD K   &ht_right RALT L  &kp SEMICOLON   &kp SQT
-    &conn_or_os CONN 0  &kp Z   &kp X            &kp C             &kp V             &kp B        &kp N   &kp M              &kp COMMA          &kp DOT           &kp FSLH        &lockmac
-                                                 &mo MOUSE         &kp BACKSPACE     &lt SYM RET  &cap    &lt MOVE SPACE
+    &kp ESC          &kp Q            &kp W            &ht_left LCTRL E  &kp R             &kp T     &kp Y   &kp U              &ht_right RCTRL I  &kp O             &kp P           &kp BSLH
+    &kp TAB          &kp A            &ht_left LALT S  &ht_left LCMD D   &ht_left LSHFT F  &kp G     &kp H   &ht_right RSHFT J  &ht_right RCMD K   &ht_right RALT L  &kp SEMICOLON   &kp SQT
+    &conn_or_os CONN 0  &kp Z            &kp X            &kp C             &kp V             &kp B     &kp N   &kp M              &kp COMMA          &kp DOT           &kp FSLH        &lockmac
+                                                       &mo MOUSE            &kp BACKSPACE     &lt SYM RET &cap  &lt MOVE SPACE
             >;
         };
 
@@ -208,7 +208,6 @@
                                         &trans        &trans        &trans        &trans   &trans
             >;
         };
-
 
         // Ported from corne-wireless-view-zmk-config's move_layer.
         MOVE {
