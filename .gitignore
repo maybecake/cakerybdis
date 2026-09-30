@@ -27,3 +27,6 @@ keymap-drawer/stacked/combos.svg
 keymap-drawer/stacked/legend.svg
 keymap-drawer/stacked/stacked.png
 keymap-drawer/stacked/stacked-combos.png
+
+# device-monitor serial logs
+logs/
