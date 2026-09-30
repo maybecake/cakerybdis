@@ -39,8 +39,6 @@
         y-input-code = <INPUT_REL_Y>;
 
         /* CONFIG_PMW3610_ALT_SWAP_XY / INVERT_X / INVERT_Y are deprecated - use DTS properties */
-        swap-xy;
-        invert-x;
         invert-y;
 
         force-awake;
