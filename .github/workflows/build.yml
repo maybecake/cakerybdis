@@ -107,6 +107,7 @@ jobs:
                                   f"{board}-{shield}" + (f"-{keymap}" if keymap else ""),
                               ),
                               "format": entry.get("format", "uf2"),
+                              "artifact_suffix": entry.get("artifact_suffix", ""),
                               "extra_conf_files": ";".join(build_extra_conf_files),
                               "extra_dtc_overlay_files": ";".join(
                                   build_extra_dtc_overlay_files
@@ -130,6 +131,7 @@ jobs:
                               f"{board}-{shield}" + (f"-{keymap}" if keymap else ""),
                           ),
                           "format": entry.get("format", "uf2"),
+                          "artifact_suffix": entry.get("artifact_suffix", ""),
                           "extra_conf_files": ";".join(entry_extra_conf_files),
                           "extra_dtc_overlay_files": ";".join(
                               entry_extra_dtc_overlay_files
@@ -233,6 +235,7 @@ jobs:
         BD="${{ matrix.group.board }}"
         SH="${{ matrix.group.shield }}"
         TARGET="${{ matrix.group.target }}"
+        SUFFIX="${{ matrix.group.artifact_suffix }}"
         EXTRA_CONF_FILES="${{ matrix.group.extra_conf_files }}"
         EXTRA_DTC_OVERLAY_FILES="${{ matrix.group.extra_dtc_overlay_files }}"
 
@@ -310,7 +313,7 @@ jobs:
         ART=$(if [[ -f "$BUILD_DIR/zephyr/zmk.uf2" ]]; then echo zmk.uf2; else echo zmk.bin; fi)
         EXT="${ART##*.}"
         # Include keymap in filename so multiple keymaps for the same shield don't overwrite.
-        FNAME="${SH}${KM:+-${KM}}.${EXT}"
+        FNAME="${SH}${KM:+-${KM}}${SUFFIX}.${EXT}"
         mkdir -p "$GITHUB_WORKSPACE/out/$NM"
         cp "$BUILD_DIR/zephyr/$ART" "$GITHUB_WORKSPACE/out/$NM/$FNAME"
 

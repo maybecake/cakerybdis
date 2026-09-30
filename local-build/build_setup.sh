@@ -234,11 +234,13 @@ build_firmware() {
   echo "=== PUBLISHING ARTIFACT & CLEANING UP ==="
   # Map the entry format to the correct directory name:
   # "bt"                - use charybdis_bt
+  # "bt_no_dcdc"        - use charybdis_bt_no_dcdc
   # "dongle_standard_nano" - use charybdis_dongle
   # Prospector entries  - use charybdis_dongle_prospector_<board>_<variant>
   # anything else       - just use the original format name
   case "$entry_format" in
     bt)                format_dir="charybdis_bt" ;;
+    bt_no_dcdc)        format_dir="charybdis_bt_no_dcdc" ;;
     dongle_standard_nano)   format_dir="charybdis_dongle" ;;
     dongle_prospector_no_sensor|dongle_prospector_nano_no_sensor)
       format_dir="charybdis_dongle_prospector_nice_nanov2_no_sensor"
@@ -273,7 +275,7 @@ build_firmware() {
 
     mkdir -p "$firmwares_dir"
     chmod 777 "$firmwares_format_dir" "$firmwares_dir"
-    dest="$firmwares_dir/${target}.${artifact_ext}"
+    dest="$firmwares_dir/${target}${entry_artifact_suffix}.${artifact_ext}"
   fi
   
   printf 'Source: %s\n' "$artifact_src"
@@ -306,6 +308,8 @@ for entry_json in "${build_entries[@]}"; do
   # Pull format & snippet values out of the JSON
   entry_format=$(jq -r '.format // .name // "custom"' <<<"$entry_json")
   entry_snippet=$(jq -r '.snippet // ""' <<<"$entry_json")
+  # Optional filename suffix marking special variants, e.g. "_no_dcdc"
+  entry_artifact_suffix=$(jq -r '.artifact_suffix // ""' <<<"$entry_json")
   mapfile -t entry_extra_conf_files < <(parse_string_or_array_field "$entry_json" "extra_conf_files")
   mapfile -t entry_extra_dtc_overlay_files < <(parse_string_or_array_field "$entry_json" "extra_dtc_overlay_files")
   mapfile -t entry_boards < <(parse_string_or_array_field "$entry_json" "board")

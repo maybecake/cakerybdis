@@ -24,6 +24,22 @@ include:
       # - focal
       # - graphite
 
+# ── Bluetooth (BT) Firmwares — No-DC/DC variant ───────────────────────────────
+  # For nice!nano boards whose DC/DC regulator is faulty (ZMK never starts:
+  # no USB, no BLE, but the bootloader works). Runs both regulators in LDO mode,
+  # at the cost of shorter battery life. See config/no_dcdc/README.md.
+  # Toggle: comment out / uncomment this whole entry.
+  - name: bt_no_dcdc
+    board: nice_nano//zmk
+    shield:
+      - charybdis_left_bt
+      - charybdis_right_bt
+    keymap:
+      - qwerty
+    extra_dtc_overlay_files:
+      - no_dcdc/no_dcdc.overlay
+    artifact_suffix: _no_dcdc
+
 # ── Standard Dongle Firmwares ─────────────────────────────────────────────────
   - name: dongle_standard_nano
     board: nice_nano//zmk

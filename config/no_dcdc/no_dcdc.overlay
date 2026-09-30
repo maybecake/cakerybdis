@@ -1,0 +1,7 @@
+/*
+ * Run the nRF52840 regulators in LDO mode instead of DC/DC.
+ * Only for nice!nano boards with a faulty/missing DC/DC inductor - see README.md.
+ */
+
+&reg0 { status = "disabled"; };                                /* high-voltage stage (VDDH -> VDD) */
+&reg1 { regulator-initial-mode = <NRF5X_REG_MODE_LDO>; };       /* main stage (VDD -> core)         */
