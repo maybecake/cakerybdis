@@ -1,6 +1,6 @@
-# maybecake fork: changes from upstream
+# Cakerybdis: changes from upstream
 
-This is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware). Every change from upstream lives in its own commit, so a feature can be reviewed, reverted or cherry-picked on its own. Each section below is one of those commits.
+Cakerybdis is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware). Every change from upstream lives in its own commit, so a feature can be reviewed, reverted or cherry-picked on its own. Each section below is one of those commits.
 
 | # | Feature | Files |
 |---|---|---|
@@ -83,7 +83,7 @@ The full write-up covers the symptoms, the trade-offs, the build toggle and the 
 Remotes in the local clone:
 
 ```
-origin    https://github.com/maybecake/charybdis-wireless-mini-zmk-firmware.git   (this fork)
+origin    https://github.com/maybecake/cakerybdis.git                               (this fork)
 upstream  git@github.com:280Zo/charybdis-wireless-mini-zmk-firmware.git          (original)
 ```
 

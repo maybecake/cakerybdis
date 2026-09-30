@@ -1,4 +1,4 @@
-[![.github/workflows/build.yml](https://github.com/maybecake/charybdis-wireless-mini-zmk-firmware/actions/workflows/build.yml/badge.svg)](https://github.com/maybecake/charybdis-wireless-mini-zmk-firmware/actions/workflows/build.yml)
+[![.github/workflows/build.yml](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml/badge.svg)](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml)
 
 > **Fork notice:** this is a personal fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware) with a custom keymap, Bluetooth pairing fixes, trackball orientation changes and a no-DC/DC build variant for faulty nice!nanos. See **[FORK.md](FORK.md)** for every change, one commit per feature. The rest of this README is upstream's documentation.
 
