@@ -43,3 +43,26 @@
 &led_strip {
 	chain-length = <20>;
 };
+
+/*
+ * Per-key LEDs: light the pressed key in a random rainbow colour.
+ * Chain order (viewed from the top): zig-zag down/up the columns starting at
+ * the top of the outer pinky column, then the inner thumb, then the outer thumb.
+ * Keymap positions on this half: row r spans 12r+6 (inner) .. 12r+11 (pinky);
+ * thumbs are 39 (inner) and 40 (outer).
+ */
+/ {
+	per_key_led {
+		compatible = "cake,per-key-led";
+		led-strip = <&led_strip>;
+		key-positions
+			= <11 23 35>	/* pinky col, down */
+			, <34 22 10>	/* ring col, up */
+			, < 9 21 33>	/* middle col, down */
+			, <32 20  8>	/* index col, up */
+			, < 7 19 31>	/* index inner col, down */
+			, <30 18  6>	/* innermost col, up */
+			, <39 40>	/* thumbs: inner, outer */
+			;
+	};
+};
