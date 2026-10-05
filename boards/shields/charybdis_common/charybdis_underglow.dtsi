@@ -1,0 +1,54 @@
+/*
+ * Per-key SK6812 LEDs, one per key, chained from DIN on pro_micro D16 (P0.10).
+ * P0.10 is an NFC pad; usable as GPIO because the NFC pins are already in GPIO
+ * mode (P0.09, its pair, is a matrix column).
+ * Driven by SPI3 (SPI0 is used by the trackball on the right half).
+ * Each half sets its own chain-length in its overlay.
+ */
+
+#include <dt-bindings/led/led.h>
+
+&pinctrl {
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
+        };
+    };
+
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 10)>;
+            low-power-enable;
+        };
+    };
+};
+
+&spi3 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+
+        /* SPI */
+        reg = <0>; /* ignored, but necessary for SPI bindings */
+        spi-max-frequency = <4000000>;
+
+        /* WS2812 / SK6812 timing at 4 MHz: 1 = 750 ns high, 0 = 250 ns high */
+        chain-length = <1>; /* overridden per half */
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
+    };
+};
+
+/ {
+    chosen {
+        zmk,underglow = &led_strip;
+    };
+};

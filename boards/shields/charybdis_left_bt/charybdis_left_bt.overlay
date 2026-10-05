@@ -1,4 +1,5 @@
 #include "../charybdis_common/charybdis.dtsi"
+#include "../charybdis_common/charybdis_underglow.dtsi"
 
 &kscan0 {
 	compatible = "zmk,kscan-gpio-matrix";
@@ -18,4 +19,9 @@
 		, <&pro_micro 4 GPIO_ACTIVE_HIGH>
 		, <&pro_micro 9 GPIO_ACTIVE_HIGH>
 		;
+};
+
+/* One LED per key: 18 main + 3 thumb */
+&led_strip {
+	chain-length = <21>;
 };

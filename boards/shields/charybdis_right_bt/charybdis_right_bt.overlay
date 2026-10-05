@@ -1,4 +1,5 @@
 #include "../charybdis_common/charybdis.dtsi"
+#include "../charybdis_common/charybdis_underglow.dtsi"
 #include "../charybdis_trackball/charybdis_pmw3610.dtsi"
 #include "../../config/trackball/charybdis_pointer.dtsi"
 
@@ -36,4 +37,9 @@
 &trackball_listener {
     status = "okay";
     device = <&trackball>;
+};
+
+/* One LED per key: 18 main + 2 thumb */
+&led_strip {
+	chain-length = <20>;
 };
