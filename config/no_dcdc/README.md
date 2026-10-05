@@ -56,4 +56,17 @@ Flash `*_no_dcdc.uf2` **only to the faulty board**. Keep the normal builds for e
 6. **Diffed ZMK against Arduino.** ZMK's `nice_nano.dts` puts `reg1` in DC/DC mode and the v2 overlay enables `reg0`. The Arduino core enables neither.
 7. **Rebuilt `settings_reset` with this overlay.** It enumerated immediately as ZMK (`1D50:615E`) with the same chip serial. The full left and right builds with the overlay work.
 
-Not yet narrowed down: whether REG0, REG1 or both are at fault. Building with only one of them in LDO mode would show which one, and which inductor to inspect: REG1 uses 10 µH + 15 nH on `DCC`/`DEC4`, REG0 uses 10 µH on `DCCH`. If REG0 turns out to be fine, it can be re-enabled to recover some battery life.
+## Second board: REG1 only (`A6AD0E34165E48A7`)
+
+A second clone showed the same symptoms. This time each regulator was tested on its own with `settings_reset` builds:
+
+| REG0 | REG1 | Result |
+|---|---|---|
+| off | LDO | boots |
+| DC/DC | LDO | boots |
+| off | DC/DC | dead |
+| DC/DC | DC/DC (stock) | dead |
+
+Only REG1's DC/DC stage is faulty on this board. [`reg1_ldo.overlay`](reg1_ldo.overlay) puts just REG1 in LDO mode, so REG0 keeps its DC/DC savings. The `bt_reg1_ldo` entry in `build.yaml` builds it for the left half as `charybdis_left_bt_reg1_ldo.uf2`.
+
+Not yet narrowed down for the first board: whether REG0, REG1 or both are at fault. Building with only one of them in LDO mode would show which one, and which inductor to inspect: REG1 uses 10 µH + 15 nH on `DCC`/`DEC4`, REG0 uses 10 µH on `DCCH`. If REG0 turns out to be fine, it can be re-enabled to recover some battery life.

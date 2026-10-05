@@ -1,0 +1,6 @@
+/*
+ * Run only the nRF52840's main regulator (REG1) in LDO mode; REG0 keeps the board's DC/DC default.
+ * Only for nice!nano boards whose REG1 DC/DC stage is faulty - see README.md.
+ */
+
+&reg1 { regulator-initial-mode = <NRF5X_REG_MODE_LDO>; };       /* main stage (VDD -> core) */

@@ -40,6 +40,20 @@ include:
       - no_dcdc/no_dcdc.overlay
     artifact_suffix: _no_dcdc
 
+# ── Bluetooth (BT) Firmwares — REG1-only LDO variant ──────────────────────────
+  # For nice!nanos where only the REG1 (VDD -> core) DC/DC stage is faulty: REG0 keeps
+  # DC/DC, so battery life is better than the full no-DC/DC build. Tested on the clone with
+  # USB serial A6AD0E34165E48A7, used as the left half. See config/no_dcdc/README.md.
+  - name: bt_reg1_ldo
+    board: nice_nano//zmk
+    shield:
+      - charybdis_left_bt
+    keymap:
+      - qwerty
+    extra_dtc_overlay_files:
+      - no_dcdc/reg1_ldo.overlay
+    artifact_suffix: _reg1_ldo
+
 # ── Standard Dongle Firmwares ─────────────────────────────────────────────────
   - name: dongle_standard_nano
     board: nice_nano//zmk
