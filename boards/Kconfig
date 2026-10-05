@@ -1,0 +1,19 @@
+config CAKE_PER_KEY_LED
+    bool "Light a key's LED in a random rainbow colour while it is pressed"
+    default y
+    depends on DT_HAS_CAKE_PER_KEY_LED_ENABLED
+    select LED_STRIP
+    select ZMK_LOW_PRIORITY_WORK_QUEUE
+
+if CAKE_PER_KEY_LED
+
+config CAKE_PER_KEY_LED_BRIGHTNESS
+    int "Brightness of a pressed key's LED in percent of full output"
+    range 1 100
+    default 20
+
+config CAKE_PER_KEY_LED_FADE_MS
+    int "Fade-out time after a key is released, in milliseconds"
+    default 500
+
+endif # CAKE_PER_KEY_LED

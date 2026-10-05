@@ -1,0 +1,18 @@
+description: |
+  Lights the LED under a key in a random rainbow colour while the key is
+  pressed, then fades it out after release.
+
+compatible: "cake,per-key-led"
+
+properties:
+  led-strip:
+    type: phandle
+    required: true
+    description: The addressable LED strip (e.g. worldsemi,ws2812-spi).
+
+  key-positions:
+    type: array
+    required: true
+    description: |
+      Keymap position for each LED, in chain order (entry 0 = first LED after
+      the controller). Positions not listed have no LED.
