@@ -1,4 +1,5 @@
 #include "../charybdis_common/charybdis.dtsi"
+#include "../charybdis_common/charybdis_underglow.dtsi"
 
 &kscan0 {
 	compatible = "zmk,kscan-gpio-matrix";
@@ -18,4 +19,32 @@
 		, <&pro_micro 4 GPIO_ACTIVE_HIGH>
 		, <&pro_micro 9 GPIO_ACTIVE_HIGH>
 		;
+};
+
+/* One LED per key: 18 main + 3 thumb */
+&led_strip {
+	chain-length = <21>;
+};
+
+/*
+ * Per-key LEDs: light the pressed key in a random rainbow colour.
+ * Chain order (viewed from the top): zig-zag down/up the columns starting at
+ * the top of the outer pinky column, then the thumbs from inner to outer.
+ * Keymap positions on this half: row r spans 12r+0 (pinky) .. 12r+5 (inner);
+ * thumbs are 38 (inner), 37 (middle) and 36 (outer).
+ */
+/ {
+	per_key_led {
+		compatible = "cake,per-key-led";
+		led-strip = <&led_strip>;
+		key-positions
+			= < 0 12 24>	/* pinky col, down */
+			, <25 13  1>	/* ring col, up */
+			, < 2 14 26>	/* middle col, down */
+			, <27 15  3>	/* index col, up */
+			, < 4 16 28>	/* index inner col, down */
+			, <29 17  5>	/* innermost col, up */
+			, <38 37 36>	/* thumbs: inner, middle, outer */
+			;
+	};
 };
