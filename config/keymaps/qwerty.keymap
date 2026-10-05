@@ -226,10 +226,10 @@
         MOUSE {
             display-name = "Mouse";
             bindings = <
-    &trans  &trans  &trans     &trans     &trans     &trans   &trans  &trans  &trans  &trans  &trans  &trans
-    &trans  &mo SLOW   &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans   &trans  &trans  &trans  &trans  &trans  &trans
-    &trans  &mo SCROLL   &trans     &trans     &trans     &trans   &trans  &trans  &trans  &trans  &trans  &trans
-                                  &trans  &trans  &trans      &trans  &trans
+    &trans  &trans     &trans     &mkp MB4   &mkp MB5     &trans   &trans  &trans  &trans  &trans  &trans  &trans
+    &trans  &trans     &mkp MCLK  &mkp RCLK  &mkp LCLK    &trans   &trans  &trans  &trans  &trans  &trans  &trans
+    &trans  &trans     &trans     &mo SLOW   &mo SCROLL   &trans   &trans  &trans  &trans  &trans  &trans  &trans
+                                  &trans  &trans  &trans  &trans   &trans
             >;
         };
     };
