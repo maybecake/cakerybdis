@@ -29,9 +29,9 @@
 /*
  * Per-key LEDs: light the pressed key in a random rainbow colour.
  * Chain order (viewed from the top): zig-zag down/up the columns starting at
- * the top of the outer pinky column, then the thumbs from inner to outer.
+ * the top of the outer pinky column, then the thumbs from outer to inner.
  * Keymap positions on this half: row r spans 12r+0 (pinky) .. 12r+5 (inner);
- * thumbs are 38 (inner), 37 (middle) and 36 (outer).
+ * thumbs are 36 (outer), 37 (middle) and 38 (inner).
  */
 / {
 	per_key_led {
@@ -43,8 +43,8 @@
 			, < 2 14 26>	/* middle col, down */
 			, <27 15  3>	/* index col, up */
 			, < 4 16 28>	/* index inner col, down */
-			, <29 17  5>	/* innermost col, up */
-			, <38 37 36>	/* thumbs: inner, middle, outer */
+			, < 5 17 29>	/* innermost col (T G B), down */
+			, <36 37 38>	/* thumbs: outer, middle, inner */
 			;
 	};
 };
