@@ -1,7 +1,7 @@
 if SHIELD_CHARYBDIS_BT_RIGHT
 
 config ZMK_KEYBOARD_NAME
-	default "Cakerybdis 0"
+	default "Cakerybdis L"
 
 config ZMK_SPLIT_BLE_ROLE_CENTRAL
 	default y
