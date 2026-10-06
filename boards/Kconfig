@@ -16,4 +16,13 @@ config CAKE_PER_KEY_LED_FADE_MS
     int "Fade-out time after a key is released, in milliseconds"
     default 500
 
+config CAKE_PER_KEY_LED_STATUS_HOLD_MS
+    int "How long a tap of &kb_status keeps the status lit, in milliseconds"
+    default 2000
+
 endif # CAKE_PER_KEY_LED
+
+config CAKE_BEHAVIOR_STATUS_LEDS
+    bool "&kb_status behavior: show the battery level and OS on the per-key LEDs"
+    default y
+    depends on DT_HAS_CAKE_BEHAVIOR_STATUS_LEDS_ENABLED

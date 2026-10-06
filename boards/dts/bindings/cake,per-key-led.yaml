@@ -16,3 +16,24 @@ properties:
     description: |
       Keymap position for each LED, in chain order (entry 0 = first LED after
       the controller). Positions not listed have no LED.
+
+  battery-positions:
+    type: array
+    description: |
+      Keymap positions used as the battery level bar, from the empty end to
+      the full end. Each position must also be listed in key-positions.
+
+  os-positions:
+    type: array
+    description: |
+      Keymap positions that show the active OS colour (white for Mac, pink for
+      Windows) with the battery bar. Each position must also be listed in
+      key-positions.
+
+  bt-positions:
+    type: array
+    description: |
+      Keymap position for each BT profile, from profile 0 up. The active
+      profile's LED shows blue if its host is connected, orange if it is
+      paired but not connected, and purple if no host is paired. Each
+      position must also be listed in key-positions.

@@ -116,10 +116,10 @@
         CONN {
             display-name = "Conn";
             bindings = <
-    &bt BT_CLR      &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &trans   &trans      &trans     &trans   &trans      &trans
-    &studio_unlock  &trans        &trans        &trans        &trans        &trans        &trans   &trans      &trans     &trans   &trans      &trans
-    &trans          &trans        &trans        &trans        &trans        &trans        &trans   &trans      &trans     &trans   &trans      &bootloader
-                                                &trans        &trans        &bootloader   &trans   &trans
+    &bt BT_CLR      &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4  &trans   &trans    &trans     &trans   &trans      &trans
+    &studio_unlock  &trans        &trans        &trans        &trans        &trans        &trans   &trans    &trans     &trans   &trans      &trans
+    &trans          &trans        &trans        &trans        &trans        &trans        &trans   &trans    &trans     &trans   &trans      &bootloader
+                                                &kb_status    &trans        &bootloader   &trans   &trans
             >;
         };
 
@@ -149,7 +149,7 @@
             display-name = "Mouse";
             bindings = <
     &trans  &trans      &trans      &mkp MB4   &mkp MB5     &kp C_VOL_UP  &kp F1  &kp F2   &kp F3   &kp F4   &trans  &kp PSCRN
-    &trans  &trans      &mkp MCLK   &mkp RCLK  &mkp LCLK    &kp C_VOL_DN  &kp F5  &kp F6   &kp F7   &kp F8   &trans  &kp PAUSE
+    &trans  &trans      &mkp MCLK   &mkp RCLK  &mkp LCLK    &kp C_VOL_DN  &kp F5  &kp F6   &kp F7   &kp F8   &trans  &kp PAUSE_BREAK
     &trans  &mo SCROLL  &mo SCROLL  &mo SLOW   &mo SCROLL   &kp C_MUTE    &kp F9  &kp F10  &kp F11  &kp F12  &trans  &trans
                                     &trans     &trans       &trans        &trans   &trans
             >;
@@ -175,4 +175,9 @@
             >;
         };
     };
+};
+
+// Show white (Mac) or pink (Windows) on the left thumbs with &kb_status.
+&kb_status {
+    win-layer = <WIN>;
 };

@@ -4,6 +4,17 @@
 
 / {
     behaviors {
+        // While held, show each half's battery level on its top-row LEDs, the
+        // OS on the left thumbs and the BT profile on the left home row
+        // (boards/src/behavior_status_leds.c). Runs
+        // on the peripherals too, so the node name must be <= 8 characters.
+        // A keymap with a Windows layer sets win-layer to show the OS.
+        kb_status: kbstatus {
+            compatible = "cake,behavior-status-leds";
+            #binding-cells = <0>;
+            display-name = "Status LEDs";
+        };
+
         // ht_num_func: homerow_mod {
         //     compatible = "zmk,behavior-hold-tap";
         //     #binding-cells = <2>;

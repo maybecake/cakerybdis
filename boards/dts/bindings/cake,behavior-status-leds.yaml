@@ -1,0 +1,16 @@
+description: |
+  Shows keyboard status on the per-key LEDs while the key is held, then fades
+  it out after release: the battery level as a bar, and the active OS layer
+  as a colour. Runs on every part of a split keyboard, so each half shows its
+  own battery level on its own LEDs.
+
+compatible: "cake,behavior-status-leds"
+
+include: zero_param.yaml
+
+properties:
+  win-layer:
+    type: int
+    description: |
+      Layer that marks the Windows base layer. While it is active the OS
+      colour shows Windows, otherwise Mac. Leave out to not show the OS.

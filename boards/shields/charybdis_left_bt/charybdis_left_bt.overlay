@@ -46,5 +46,11 @@
 			, < 5 17 29>	/* innermost col (T G B), down */
 			, <36 37 38>	/* thumbs: outer, middle, inner */
 			;
+		/* &kb_status: top row, filling from the inner column outwards */
+		battery-positions = <5 4 3 2 1 0>;
+		/* &kb_status: thumbs show the OS (white = Mac, pink = Windows) */
+		os-positions = <36 37 38>;
+		/* &kb_status: home row under the BT_SEL 0-4 keys shows the active profile */
+		bt-positions = <13 14 15 16 17>;
 	};
 };
