@@ -1,8 +1,69 @@
 [![.github/workflows/build.yml](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml/badge.svg)](https://github.com/maybecake/cakerybdis/actions/workflows/build.yml)
 
-> **Fork notice:** this is a personal fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware) with a custom keymap, Bluetooth pairing fixes, trackball orientation changes and a no-DC/DC build variant for faulty nice!nanos. See **[FORK.md](FORK.md)** for every change, one commit per feature. The rest of this README is upstream's documentation.
->
-> **Dependencies are forked and pinned.** All the firmware source this repo downloads at build time comes from `cakerybdis-` forks on my account, each pinned to an exact commit in [`config/west.yml`](config/west.yml): [ZMK](https://github.com/maybecake/cakerybdis-zmk) (with a split-disconnect fix), the [PMW3610 trackball driver](https://github.com/maybecake/cakerybdis-zmk-pmw3610-driver) and the [Prospector module](https://github.com/maybecake/cakerybdis-prospector-zmk-module). See [FORK.md → Dependencies](FORK.md#dependencies) for what each fork contains and how to update it.
+# Cakerybdis
+
+> [!IMPORTANT]
+> This is a personal fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware), built for my own Bluetooth split Charybdis with per-key LEDs. Everything under **[Upstream documentation](#upstream-documentation)** is 280Zo's original README. Some of it no longer matches this fork. See [What's different](#whats-different-from-upstream) below.
+
+## What's different from upstream
+
+| Area | Change |
+|---|---|
+| **Keymap** | `qwerty` is my own Corne-style layout (layers below). `colemak_dh` and the other keymaps are unchanged from upstream. |
+| **Per-key LEDs** | Both halves drive a chain of SK6812 MINI-E LEDs (one per key) from pin D16 over SPI3. Pressed keys light up in a random rainbow colour and fade out. The code is a custom module in [`boards/src/`](boards/src). |
+| **Status LEDs (`&kb_status`)** | Hold the key (or tap it for 2 s) to show each half's battery level as a bar on its top row, the OS layer on the left thumbs (white = Mac, pink = Windows) and the active BT profile on the left home row (blue = connected, orange = paired but disconnected, purple = empty). |
+| **Bluetooth** | The right (central) half advertises as **`Cakerybdis L`**. Pairing fixes for Windows `LL_PROC_COLLISION` disconnects, and passkey entry for Android (type the 6-digit code, then Enter). |
+| **Trackball** | Axis orientation changed to match how the sensor is mounted in this build (`invert-y` only). |
+| **Faulty nice!nano builds** | Two extra variants for nice!nano clones with broken regulators: `bt_no_dcdc` (both regulators in LDO mode) and `bt_reg1_ldo` (left half, REG1 only). See [config/no_dcdc/README.md](config/no_dcdc/README.md). |
+| **Builds** | Only the Bluetooth split firmware is built. The dongle and Prospector display builds are commented out in [build.yaml](build.yaml) and can be turned back on there. |
+| **Dependencies** | ZMK, the PMW3610 trackball driver and the Prospector module are built from `cakerybdis-` forks, each pinned to an exact commit in [`config/west.yml`](config/west.yml). |
+
+[FORK.md](FORK.md) has the detailed write-up of each change and how to keep the forks up to date.
+
+### `qwerty` layers
+
+| # | Layer | What's on it |
+|---|---|---|
+| 0 | **MAC** | Base layer. Home-row mods on E/S/D/F (Ctrl/Alt/Cmd/Shift) and I/J/K/L (Ctrl/Shift/Cmd/Alt). |
+| 1 | **WIN** | Same as MAC, with Ctrl in place of Cmd. |
+| 2 | **SYM** | Symbols on the left, a numpad on the right, `0` and `_` on the right thumbs. |
+| 3 | **CONN** | `BT_CLR`, `BT_SEL 0–4`, ZMK Studio unlock, `&kb_status` and bootloader keys. |
+| 4 | **MOVE** | Arrows, Home/End, PgUp/PgDn, word jumps and line start/end. |
+| 5 | **MOUSE** | Left/middle/right click, back/forward, media volume, F1–F12, holds for SLOW and SCROLL. |
+| 6 | **SLOW** | Precision pointer. |
+| 7 | **SCROLL** | Trackball becomes a scroll wheel. |
+
+- **Thumbs:** hold for MOUSE, Backspace, tap Enter / hold for SYM, tap Delete / double-tap for Caps Word, tap Space / hold for MOVE.
+- **Bottom-left key:** hold for CONN. Tap once for GUI, twice for MAC, three times for WIN.
+- **Bottom-right key:** double-tap to lock the screen (Ctrl+Cmd+Q on MAC, Win+L on WIN).
+
+The keymap images, layer tables, combos and "Other Highlights" in the upstream docs below describe upstream's keymap, not this `qwerty` layout.
+
+### Releases
+
+Each [release](https://github.com/maybecake/cakerybdis/releases) contains:
+
+| File | Use |
+|---|---|
+| `firmware-bt-qwerty.zip` | Left and right halves with my `qwerty` keymap. This is the normal build. |
+| `firmware-bt-colemak_dh.zip` | Same firmware with upstream's Colemak-DH keymap. |
+| `firmware-bt_no_dcdc-qwerty.zip` | Both halves with both regulators in LDO mode, for a nice!nano with a faulty DC/DC regulator. |
+| `firmware-bt_reg1_ldo-qwerty.zip` | Left half only, with REG1 in LDO mode. |
+| `settings_reset.uf2` | Clears saved settings and pairings. Flash it to both halves before switching firmware variants. |
+
+### Related repos
+
+| Repo | What it is |
+|---|---|
+| [maybecake/cakerybdis](https://github.com/maybecake/cakerybdis) (this repo) | The keyboard config: keymaps, shields, LED code, build matrix and releases. This is the one to edit. |
+| [maybecake/cakerybdis-zmk](https://github.com/maybecake/cakerybdis-zmk) | A fork of the ZMK firmware itself, which this repo downloads at build time. Its `cakerybdis` branch is upstream ZMK plus a split-disconnect fix and a pinned Zephyr version. It has no keymaps and needs no changes unless ZMK is being updated. |
+| [cakerybdis-zmk-pmw3610-driver](https://github.com/maybecake/cakerybdis-zmk-pmw3610-driver), [cakerybdis-prospector-zmk-module](https://github.com/maybecake/cakerybdis-prospector-zmk-module) | Pinned forks of the trackball driver and the Prospector display module, with no local changes. |
+
+---
+
+# Upstream documentation
+
+*The rest of this file is 280Zo's original README.*
 
 ## Intro
 

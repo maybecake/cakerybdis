@@ -1,21 +1,26 @@
 # Cakerybdis: changes from upstream
 
-Cakerybdis is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware). Every change from upstream lives in its own commit, so a feature can be reviewed, reverted or cherry-picked on its own. Each section below is one of those commits.
+Cakerybdis is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://github.com/280Zo/charybdis-wireless-mini-zmk-firmware). Changes from upstream are kept in small, focused commits, so a feature can be reviewed, reverted or cherry-picked on its own. Each section below is one feature. Run `git log -- <file>` on the listed files to find its commits.
 
 | # | Feature | Files |
 |---|---|---|
-| 1 | [Keyboard name](#1-keyboard-name-cakerybdis-0) | `boards/shields/charybdis_common/Kconfig.bt.defconfig` |
+| 1 | [Keyboard name](#1-keyboard-name-cakerybdis-l) | `boards/shields/charybdis_common/Kconfig.bt.defconfig`, `boards/shields/charybdis_right_bt/charybdis_right_bt.conf` |
 | 2 | [Bluetooth pairing stability + passkey](#2-bluetooth-pairing-stability--passkey-entry) | `boards/shields/charybdis_right_bt/charybdis_right_bt.conf` |
 | 3 | [Trackball orientation](#3-trackball-orientation) | `boards/shields/charybdis_trackball/charybdis_pmw3610.dtsi` |
 | 4 | [Corne-style qwerty keymap](#4-corne-style-qwerty-keymap) | `config/keymaps/qwerty.keymap`, `config/_qwerty_dev.keymap` |
-| 5 | [No-DC/DC variant for a faulty nice!nano](#5-no-dcdc-variant-for-a-faulty-nicenano) | `config/no_dcdc/`, `build.yaml`, `.github/workflows/build.yml`, `local-build/build_setup.sh` |
-| 6 | [Forked + pinned dependencies](#dependencies) | `config/west.yml` |
+| 5 | [LDO variants for faulty nice!nanos](#5-ldo-variants-for-faulty-nicenanos) | `config/no_dcdc/`, `build.yaml`, `.github/workflows/build.yml`, `local-build/build_setup.sh` |
+| 6 | [Per-key LEDs](#6-per-key-leds) | `boards/src/per_key_led.c`, `boards/Kconfig`, `boards/dts/bindings/`, `boards/shields/charybdis_common/charybdis_underglow.dtsi`, `boards/shields/charybdis_*_bt/` |
+| 7 | [Status LEDs (`&kb_status`)](#7-status-leds-kb_status) | `boards/src/behavior_status_leds.c`, `boards/include/cake/per_key_led.h`, `config/keymap_features/behaviors.dtsi` |
+| 8 | [Bluetooth-only builds](#8-bluetooth-only-builds) | `build.yaml` |
+| 9 | [Forked + pinned dependencies](#dependencies) | `config/west.yml` |
 
 ---
 
-## 1. Keyboard name: "Cakerybdis 0"
+## 1. Keyboard name: "Cakerybdis L"
 
-The right (central) half advertises over Bluetooth and USB as **`Cakerybdis 0`** instead of `Charybdis`, which makes it easy to pick out of the OS pairing list when several boards are around. To rename it, change `ZMK_KEYBOARD_NAME` in `Kconfig.bt.defconfig`. ZMK limits the name to 16 characters.
+The right (central) half advertises over Bluetooth and USB as **`Cakerybdis L`** instead of `Charybdis`, which makes it easy to pick out of the OS pairing list when several boards are around. (It was briefly called `Cakerybdis 0`.) To rename it, change `ZMK_KEYBOARD_NAME` in `Kconfig.bt.defconfig`. ZMK limits the name to 16 characters.
+
+The right half's `.conf` also sets `CONFIG_BT_DEVICE_NAME_DYNAMIC=n`. With a dynamic name, the BT stack saves the name to settings on first boot and keeps advertising that saved name after a rename. The firmware never changes the name at runtime, so the static name is used instead.
 
 ## 2. Bluetooth pairing stability + passkey entry
 
@@ -34,24 +39,20 @@ These settings are added to the right half's `.conf`, the half that pairs with t
 
 ## 4. Corne-style qwerty keymap
 
-`qwerty.keymap` is reworked to match my Corne layout ([corne-wireless-view-zmk-config](https://github.com/maybecake/corne-wireless-view-zmk-config)), so both keyboards behave the same.
+`qwerty.keymap` is reworked to match my Corne layout ([corne-wireless-view-zmk-config](https://github.com/maybecake/corne-wireless-view-zmk-config)), so both keyboards behave the same. Upstream's NUM, NAV, GAME and EXTRAS layers are removed. The other keymaps (`colemak_dh` etc.) are unchanged from upstream.
 
 **Layers**
 
 | # | Layer | Purpose |
 |---|---|---|
 | 0 | **MAC** | Default base layer, with macOS-style modifiers |
-| 1 | NUM | Unchanged from upstream |
-| 2 | NAV | Unchanged from upstream |
-| 3 | **SYM** | Redesigned: symbols on the left, numpad (7-8-9 / 4-5-6 / 1-2-3, `0` on a thumb) on the right |
-| 4 | GAME | Unchanged, except the bottom-left key is now transparent |
-| 5 | EXTRAS | Unchanged from upstream |
-| 6 | SLOW | Precision pointer (from upstream) |
-| 7 | SCROLL | Trackball becomes a scroll wheel (from upstream) |
-| 8 | **WIN** | Same as MAC, but Cmd is replaced with Ctrl |
-| 9 | **CONN** | Bluetooth: `BT_CLR` on the Esc position, `BT_SEL 0–4` on Q–T, bootloader on both bottom corners |
-| 10 | **MOVE** | Home/Up/End/PgUp on W/E/R/T, Left/Down/Right/PgDn on S/D/F/G, word jumps (Alt+←/→) and line start/end (Ctrl+A / Ctrl+E) on the bottom row |
-| 11 | **MOUSE** | S/D/F = right/middle/left click, hold A = SLOW, hold Z = SCROLL |
+| 1 | **WIN** | Same as MAC, but Cmd is replaced with Ctrl |
+| 2 | **SYM** | Symbols on the left, numpad (7-8-9 / 4-5-6 / 1-2-3) on the right, `0` and `_` on the right thumbs |
+| 3 | **CONN** | `BT_CLR` on the Esc position, `BT_SEL 0–4` on Q–T, ZMK Studio unlock on Tab, `&kb_status` on the outer left thumb, bootloader on the bottom-right key and the inner left thumb |
+| 4 | **MOVE** | Home/Up/End/PgUp on W/E/R/T, Left/Down/Right/PgDn on S/D/F/G, word jumps (Alt+←/→) and line start/end (Ctrl+A / Ctrl+E) on the bottom row |
+| 5 | **MOUSE** | Back/forward (MB4/MB5) on E/R, middle/right/left click on S/D/F, hold C for SLOW, hold Z/X/V for SCROLL, volume up/down/mute on T/G/B. F1–F12, Print Screen and Pause on the right |
+| 6 | **SLOW** | Precision pointer (from upstream) |
+| 7 | **SCROLL** | Trackball becomes a scroll wheel (from upstream) |
 
 **Base layer (MAC / WIN)**
 
@@ -63,19 +64,61 @@ These settings are added to the right half's `.conf`, the half that pairs with t
 - **Right thumbs:** `cap` (tap = Delete, double-tap = Caps Word) / tap Space, hold for MOVE.
 - **Bottom-left outer key, `conn_or_os`:**
   - Hold for CONN.
-  - Tap once for GUI, twice for MAC, three times for WIN, four times for GAME.
+  - Tap once for GUI, twice for MAC, three times for WIN.
 - **Bottom-right outer key:** double-tap to lock the screen. On MAC this sends Ctrl+Cmd+Q (`lockmac`). On WIN it sends Win+L (`lockwin`).
 - **Outer columns:** Esc / Tab on the left, `\` / `'` on the right.
 
-`config/_qwerty_dev.keymap` is a scratch copy used while developing the layout. It differs only in whitespace, and the build ignores it, because builds only read `config/keymaps/*.keymap`.
+`config/_qwerty_dev.keymap` is an older scratch copy from early development of the layout. It is out of date, and the build ignores it, because builds only read `config/keymaps/*.keymap`.
 
-## 5. No-DC/DC variant for a faulty nice!nano
+## 5. LDO variants for faulty nice!nanos
 
-One nice!nano in a batch had a broken DC/DC regulator, so ZMK never started on it: no USB and no Bluetooth, even though the bootloader worked. A device-tree overlay switches the nRF52840's regulators to LDO mode, and an extra `build.yaml` entry (`bt_no_dcdc`) builds it as a separate, clearly named variant. To turn the variant on or off, comment out or uncomment that entry.
+Some nice!nano clones have a broken DC/DC regulator, so ZMK never starts on them: no USB and no Bluetooth, even though the bootloader works. Device-tree overlays switch the nRF52840's regulators to LDO mode, and extra `build.yaml` entries build them as separate, clearly named variants:
 
-To support the naming, this commit adds an `artifact_suffix` field to `build.yaml` entries. Both the GitHub Actions workflow and the local Docker build append it to output filenames (`charybdis_right_bt_no_dcdc.uf2`).
+| Build entry | Overlay | Builds | Use |
+|---|---|---|---|
+| `bt_no_dcdc` | `no_dcdc/no_dcdc.overlay` | both halves | Both regulators (REG0 and REG1) in LDO mode. Works on any board with a faulty regulator, at the cost of shorter battery life. |
+| `bt_reg1_ldo` | `no_dcdc/reg1_ldo.overlay` | left half | Only REG1 in LDO mode, so REG0 keeps its DC/DC savings. For the clone used as my left half, where only the REG1 stage is faulty. |
+
+To turn a variant on or off, comment out or uncomment its entry.
+
+To support the naming, an `artifact_suffix` field is added to `build.yaml` entries. Both the GitHub Actions workflow and the local Docker build append it to output filenames (`charybdis_right_bt_no_dcdc.uf2`, `charybdis_left_bt_reg1_ldo.uf2`).
 
 The full write-up covers the symptoms, the trade-offs, the build toggle and the debugging steps. See **[config/no_dcdc/README.md](config/no_dcdc/README.md)**.
+
+## 6. Per-key LEDs
+
+Each half has a chain of SK6812 MINI-E LEDs, one per key: 21 on the left (3 thumbs) and 20 on the right (2 thumbs). The chain is driven from pro_micro **D16 (P0.10) over SPI3**, because SPI0 is used by the trackball on the right half. The LEDs run from the always-on VCC (`CONFIG_ZMK_EXT_POWER=n`). The `led_strip` node is in `charybdis_common/charybdis_underglow.dtsi`.
+
+A custom module in `boards/` adds a `cake,per-key-led` node. (`boards/` is a Zephyr module, so it can build C sources and provide DT bindings.) In each half's `.overlay`, `key-positions` maps every LED in the chain to a keymap position. The chains zig-zag down and up the columns, starting at the top of the outer pinky column, then run through the thumbs.
+
+When a key is pressed, its LED lights in a random rainbow colour. After release it fades out. ZMK's stock RGB underglow is turned off (`CONFIG_ZMK_RGB_UNDERGLOW=n`) so the two don't fight over the same strip.
+
+| Kconfig option | Default | What it does |
+|---|---|---|
+| `CONFIG_CAKE_PER_KEY_LED` | `y` | Enables the module when a `cake,per-key-led` node exists |
+| `CONFIG_CAKE_PER_KEY_LED_BRIGHTNESS` | `20` | Brightness of a lit key, in percent of full output |
+| `CONFIG_CAKE_PER_KEY_LED_FADE_MS` | `500` | Fade-out time after release |
+| `CONFIG_CAKE_PER_KEY_LED_STATUS_HOLD_MS` | `2000` | How long a tap of `&kb_status` keeps the status lit |
+
+If a key lights the wrong LED, fix the order in that half's `key-positions`.
+
+## 7. Status LEDs (`&kb_status`)
+
+`&kb_status` (a `cake,behavior-status-leds` behavior, bound on the CONN layer) shows the keyboard's state on the per-key LEDs while held, or for 2 s after a tap:
+
+| What | Where | Colours |
+|---|---|---|
+| Battery level | Each half's top row, as a bar filling from the inner column outwards | — |
+| OS layer | Left thumbs | White = MAC, pink = WIN |
+| Active BT profile | Left home row, under the `BT_SEL 0–4` keys | Blue = connected, orange = paired but not connected, purple = empty |
+
+The positions are set by `battery-positions`, `os-positions` and `bt-positions` in each half's `.overlay`. Which layer counts as Windows is set by `win-layer` at the bottom of `qwerty.keymap`.
+
+The behavior has global locality, so it runs on both halves. The peripheral (left) half doesn't know the layer state or the BT profile, so the central adds them to the binding's parameters before forwarding it.
+
+## 8. Bluetooth-only builds
+
+Only the Bluetooth split (left peripheral, right central) is used, so the standard dongle and all Prospector display builds are commented out in `build.yaml`. Uncomment an entry to build it again. The Prospector module is still in `west.yml`, so those builds keep working if turned back on.
 
 ---
 
