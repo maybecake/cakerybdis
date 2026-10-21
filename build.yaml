@@ -24,6 +24,19 @@ include:
       # - focal
       # - graphite
 
+# ── Bluetooth (BT) Firmwares — No-LED variant ─────────────────────────────────
+  # Per-key LEDs disabled and advertised as "Cakerybdis 0". See config/no_led/no_led.conf.
+  - name: bt_no_led
+    board: nice_nano//zmk
+    shield:
+      - charybdis_left_bt
+      - charybdis_right_bt
+    keymap:
+      - qwerty
+    extra_conf_files:
+      - no_led/no_led.conf
+    artifact_suffix: _no_led
+
 # ── Bluetooth (BT) Firmwares — No-DC/DC variant ───────────────────────────────
   # For nice!nano boards whose DC/DC regulator is faulty (ZMK never starts:
   # no USB, no BLE, but the bootloader works). Runs both regulators in LDO mode,
