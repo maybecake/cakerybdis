@@ -28,7 +28,8 @@ These settings are added to the right half's `.conf`, the half that pairs with t
 
 | Setting | Why |
 |---|---|
-| `CONFIG_BT_AUTO_PHY_UPDATE=n`<br>`CONFIG_BT_AUTO_DATA_LEN_UPDATE=n`<br>`CONFIG_BT_GAP_AUTO_UPDATE_CONN_PARAMS=n` | Pairing with Windows sometimes failed with disconnect reason `0x23` (`LL_PROC_COLLISION`). The keyboard's own automatic PHY, data-length and connection-parameter updates were colliding with the pairing handshake. With them off, the host drives those updates. |
+| `CONFIG_BT_AUTO_PHY_UPDATE=n`<br>`CONFIG_BT_AUTO_DATA_LEN_UPDATE=n` | Pairing with Windows sometimes failed with disconnect reason `0x23` (`LL_PROC_COLLISION`). The keyboard's own automatic PHY and data-length updates were colliding with the pairing handshake. With them off, the host drives those updates. |
+| `CONFIG_BT_GAP_AUTO_UPDATE_CONN_PARAMS=y`<br>`CONFIG_BT_CONN_PARAM_UPDATE_TIMEOUT=5000` | The connection-parameter update is delayed rather than disabled. With it off, the keyboard never asked for ZMK's 7.5–15 ms interval, hosts like Windows kept their slow default, and the trackball lagged over Bluetooth (macOS picks a fast interval on its own). The request goes out 5 s after every connection, after first-time pairing has finished. If Windows pairing collisions come back, raise this value. |
 | `CONFIG_ZMK_BLE_PASSKEY_ENTRY=y` | Without passkey entry the keyboard only supports "Just Works" pairing, and some Android builds reject that for keyboards (`Security failed err 1 AUTH_FAIL`). With it on, pairing gets MITM protection. |
 
 **Pairing with passkey entry:** when the host shows a 6-digit code, type it on the keyboard and press **Enter**.
