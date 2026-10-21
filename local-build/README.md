@@ -34,6 +34,24 @@ docker-compose -f local-build/docker-compose.yml run --rm builder
 Firmware files are placed under the `firmwares/` directory at the root of the repo.
 
 
+## Quick incremental builds
+
+`build_setup.sh` copies the whole repo into a fresh sandbox and builds from scratch every time, which is very slow on a Windows bind mount. For iterating on one variant, keep a container running and use `quick_build.sh`, which builds straight from the mount and keeps each variant's build directory in the container:
+
+```bash
+# once (the container restarts with Docker)
+docker run -d --name cakerybdis-builder --restart unless-stopped \
+  -v "C:/projects/cakerybdis:/workspaces/zmk" -w /workspaces/zmk \
+  zmkfirmware/zmk-dev-arm:stable sleep infinity
+
+# LED keyboard ("Cakerybdis L")
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l qwerty charybdis_left_bt charybdis_right_bt
+# No-LED keyboard ("Cakerybdis 0")
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt charybdis_right_bt -- no_led/no_led.conf
+```
+
+Files after `--` are relative to `config/`; `.overlay` files are passed as devicetree overlays, e.g. `-- no_dcdc/reg1_ldo.overlay` for a left half with a faulty REG1. Output goes to `firmwares/<name>/<name>_left.uf2` and `<name>_right.uf2`. The first build of a name takes several minutes; later builds only recompile what changed. Run `west update` yourself (`docker exec cakerybdis-builder west update`) after changing `config/west.yml`. Note that `build_setup.sh` empties `firmwares/` when it runs.
+
 ## Troubleshooting
 
 ### Drop into a shell in the build container

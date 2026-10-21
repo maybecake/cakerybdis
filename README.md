@@ -12,10 +12,11 @@
 | **Keymap** | `qwerty` is my own Corne-style layout (layers below). `colemak_dh` and the other keymaps are unchanged from upstream. |
 | **Per-key LEDs** | Both halves drive a chain of SK6812 MINI-E LEDs (one per key) from pin D16 over SPI3. Pressed keys light up in a random rainbow colour and fade out. The code is a custom module in [`boards/src/`](boards/src). |
 | **Status LEDs (`&kb_status`)** | Hold the key (or tap it for 2 s) to show each half's battery level as a bar on its top row, the OS layer on the left thumbs (white = Mac, pink = Windows) and the active BT profile on the left home row (blue = connected, orange = paired but disconnected, purple = empty). |
-| **Bluetooth** | The right (central) half advertises as **`Cakerybdis L`**. Pairing fixes for Windows `LL_PROC_COLLISION` disconnects, and passkey entry for Android (type the 6-digit code, then Enter). |
+| **Bluetooth** | The right (central) half advertises as **`Cakerybdis L`**. Pairing fixes for Windows `LL_PROC_COLLISION` disconnects, passkey entry for Android (type the 6-digit code, then Enter), and a delayed request for a fast connection interval so the trackball doesn't lag on Windows. |
 | **Trackball** | Axis orientation changed to match how the sensor is mounted in this build (`invert-y` only). |
+| **No-LED build** | `bt_no_led`: per-key LEDs off and advertised as **`Cakerybdis 0`**, for my second keyboard, which has no LEDs. See [config/no_led/no_led.conf](config/no_led/no_led.conf). |
 | **Faulty nice!nano builds** | Two extra variants for nice!nano clones with broken regulators: `bt_no_dcdc` (both regulators in LDO mode) and `bt_reg1_ldo` (left half, REG1 only). See [config/no_dcdc/README.md](config/no_dcdc/README.md). |
-| **Builds** | Only the Bluetooth split firmware is built. The dongle and Prospector display builds are commented out in [build.yaml](build.yaml) and can be turned back on there. |
+| **Builds** | Only the Bluetooth split firmware is built. The dongle and Prospector display builds are commented out in [build.yaml](build.yaml) and can be turned back on there. A fast incremental local build is in [`local-build/quick_build.sh`](local-build/quick_build.sh) (see [Building locally](#building-locally)). |
 | **Dependencies** | ZMK, the PMW3610 trackball driver and the Prospector module are built from `cakerybdis-` forks, each pinned to an exact commit in [`config/west.yml`](config/west.yml). |
 
 [FORK.md](FORK.md) has the detailed write-up of each change and how to keep the forks up to date.
@@ -47,9 +48,55 @@ Each [release](https://github.com/maybecake/cakerybdis/releases) contains:
 |---|---|
 | `firmware-bt-qwerty.zip` | Left and right halves with my `qwerty` keymap. This is the normal build. |
 | `firmware-bt-colemak_dh.zip` | Same firmware with upstream's Colemak-DH keymap. |
+| `firmware-bt_no_led-qwerty.zip` | Both halves with per-key LEDs off, advertised as `Cakerybdis 0`. |
 | `firmware-bt_no_dcdc-qwerty.zip` | Both halves with both regulators in LDO mode, for a nice!nano with a faulty DC/DC regulator. |
 | `firmware-bt_reg1_ldo-qwerty.zip` | Left half only, with REG1 in LDO mode. |
 | `settings_reset.uf2` | Clears saved settings and pairings. Flash it to both halves before switching firmware variants. |
+
+### My keyboards
+
+| Keyboard | Bluetooth name | Firmware | Notes |
+|---|---|---|---|
+| LED keyboard | `Cakerybdis L` | `bt` (default config) | Left half has a faulty regulator: flash a `reg1_ldo` left half (or `no_dcdc` if that doesn't boot). |
+| No-LED keyboard | `Cakerybdis 0` | `bt_no_led` | |
+| Test right half | `chary_test` | local only: `quick_build.sh chary_test qwerty charybdis_right_bt -- chary_test/chary_test.conf` | No LEDs. |
+
+## Building locally
+
+Two Docker-based options, both using the `zmkfirmware/zmk-dev-arm:stable` image. Details are in [local-build/README.md](local-build/README.md).
+
+**Quick incremental builds (recommended for iterating).** Keep one container running and build a single variant into `firmwares/<name>/`:
+
+```bash
+# Once. The container restarts together with Docker Desktop.
+docker run -d --name cakerybdis-builder --restart unless-stopped \
+  -v "C:/projects/cakerybdis:/workspaces/zmk" -w /workspaces/zmk \
+  zmkfirmware/zmk-dev-arm:stable sleep infinity
+
+# quick_build.sh <name> <keymap> <shield>... [-- <config-relative .conf/.overlay files>...]
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l qwerty charybdis_left_bt charybdis_right_bt
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt charybdis_right_bt -- no_led/no_led.conf
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l_reg1_ldo qwerty charybdis_left_bt -- no_dcdc/reg1_ldo.overlay
+```
+
+- Output: `firmwares/<name>/<name>_left.uf2` and `<name>_right.uf2`.
+- Timing: the first build of a name takes about 4–5 minutes per half. A rebuild with no changes takes about 15 s per half, and a keymap or `.conf` change about 2–3 minutes.
+- The shields and extra files are fixed on a name's first build. To change them, use a new name or delete `/build/<name>` inside the container.
+- `.conf` files after `--` are merged in order, so a later file overrides an earlier one. To make a new variant, add a small `.conf` under `config/<variant>/`, e.g. `CONFIG_CAKE_PER_KEY_LED=n` plus `CONFIG_ZMK_KEYBOARD_NAME="..."` (16 characters max).
+- After changing `config/west.yml`, run `docker exec cakerybdis-builder west update`.
+
+**Full matrix build.** `docker-compose -f local-build/docker-compose.yml run --rm builder` builds every entry in [build.yaml](build.yaml), the same as CI. On Windows it is very slow (hours), because it copies the whole repo, including `zephyr/` and `modules/`, into a sandbox for every shield over the Windows bind mount. It also **empties `firmwares/`** first, including the `quick_build.sh` folders. To build only some entries, mount a trimmed copy of `build.yaml` over it: `-v <trimmed>.yaml:/workspaces/zmk/build.yaml:ro`. Set `SKIP_WEST_UPDATE=true` to skip `west update`.
+
+## Troubleshooting and lessons learned
+
+- **Layer order is the order of the layer nodes in the keymap, not the `#define`s.** If `&lt SYM` or `&mo CONN` opens the wrong layer, check that the nodes in `keymap { ... }` appear in the same order as the numbers in `#define MAC 0 ... SCROLL 7`.
+- **A BT profile won't connect (others do).** That profile still has a stale bond from an earlier pairing or an earlier name. Forget the keyboard on the host, then on the keyboard hold CONN, tap `BT_SEL n`, then `BT_CLR`, and pair again. `settings_reset.uf2` clears every profile at once.
+- **Renaming the keyboard.** Hosts cache the old name, so forget the device and re-pair. `CONFIG_BT_DEVICE_NAME_DYNAMIC=n` keeps a stored name from overriding the firmware's name.
+- **Trackball lags over Bluetooth on Windows but not on macOS.** macOS picks a fast connection interval by itself, but Windows keeps its slow default unless the keyboard asks for a faster one. The right half sends that request 5 s after every connection (`CONFIG_BT_CONN_PARAM_UPDATE_TIMEOUT`). It was briefly disabled to work around pairing collisions, which caused the lag. If the lag persists, check the PC's Bluetooth adapter, USB 3 interference near a dongle, and Windows power saving on the adapter.
+- **Trackball axes.** `invert-y` on the PMW3610 node is correct for both keyboards. Scroll direction is set separately in [`charybdis_pointer.dtsi`](config/trackball/charybdis_pointer.dtsi) (`INPUT_TRANSFORM_Y_INVERT` on the scroll layer).
+- **Keymap changes don't show up after flashing.** Changes saved in ZMK Studio are stored in settings and override the compiled keymap. Flash `settings_reset.uf2` first.
+- **A half never starts (no USB, no BLE, but the bootloader works).** This usually means a faulty DC/DC regulator on a nice!nano clone. Try `reg1_ldo.overlay` first, then `no_dcdc.overlay`. See [config/no_dcdc/README.md](config/no_dcdc/README.md).
+- **No LEDs, `&kb_status` still in the keymap.** With `CONFIG_CAKE_PER_KEY_LED=n` the status behavior builds as a no-op, so the same keymap works for LED and no-LED boards.
 
 ### Related repos
 
