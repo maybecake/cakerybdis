@@ -1,0 +1,35 @@
+/*
+ * Cakerybdis 0 (right half only): this board's trackball sensor is mounted
+ * rotated 90 degrees from Cakerybdis L.
+ *
+ * With the sensor set to swap-xy (and no inversion), the pointer moved 90 degrees
+ * clockwise from the ball: ball left -> pointer up, down -> left, up -> right.
+ * ZMK's transform swaps first and then inverts, so XY_SWAP | Y_INVERT on top of
+ * that gives back the ball's direction. Layer overrides replace the base chain,
+ * so each chain gets the transform first.
+ */
+#include <dt-bindings/zmk/input_transform.h>
+
+#define CAKE0_ROTATE &zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_Y_INVERT)
+
+&trackball {
+    /delete-property/ invert-y;
+    swap-xy;
+};
+
+&trackball_listener {
+    input-processors = <CAKE0_ROTATE &zip_xy_scaler 5 5>;
+};
+
+&scroller {
+    input-processors = <
+        CAKE0_ROTATE
+        &zip_xy_scaler 1 15
+        &zip_xy_to_scroll_mapper
+        &zip_scroll_transform (INPUT_TRANSFORM_Y_INVERT)
+    >;
+};
+
+&slow_pointer {
+    input-processors = <CAKE0_ROTATE &zip_xy_scaler 2 6>;
+};

@@ -26,16 +26,24 @@ include:
 
 # ── Bluetooth (BT) Firmwares — No-LED variant ─────────────────────────────────
   # Per-key LEDs disabled and advertised as "Cakerybdis 0". See config/no_led/no_led.conf.
+  # Right half: its trackball is mounted rotated 90 degrees (no_led/trackball_rotate.overlay),
+  # and its nice!nano needs VCC actively switched on or the trackball dies on battery
+  # (ext_power/ext_power.conf). A build item's extra_conf_files replaces the entry's list.
   - name: bt_no_led
     board: nice_nano//zmk
-    shield:
-      - charybdis_left_bt
-      - charybdis_right_bt
     keymap:
       - qwerty
     extra_conf_files:
       - no_led/no_led.conf
     artifact_suffix: _no_led
+    builds:
+      - shield: charybdis_left_bt
+      - shield: charybdis_right_bt
+        extra_conf_files:
+          - no_led/no_led.conf
+          - ext_power/ext_power.conf
+        extra_dtc_overlay_files:
+          - no_led/trackball_rotate.overlay
 
 # ── Bluetooth (BT) Firmwares — No-DC/DC variant ───────────────────────────────
   # For nice!nano boards whose DC/DC regulator is faulty (ZMK never starts:
