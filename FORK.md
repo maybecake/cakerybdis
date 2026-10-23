@@ -12,7 +12,8 @@ Cakerybdis is a fork of [280Zo/charybdis-wireless-mini-zmk-firmware](https://git
 | 6 | [Per-key LEDs](#6-per-key-leds) | `boards/src/per_key_led.c`, `boards/Kconfig`, `boards/dts/bindings/`, `boards/shields/charybdis_common/charybdis_underglow.dtsi`, `boards/shields/charybdis_*_bt/` |
 | 7 | [Status LEDs (`&kb_status`)](#7-status-leds-kb_status) | `boards/src/behavior_status_leds.c`, `boards/include/cake/per_key_led.h`, `config/keymap_features/behaviors.dtsi` |
 | 8 | [Bluetooth-only builds](#8-bluetooth-only-builds) | `build.yaml` |
-| 9 | [Forked + pinned dependencies](#dependencies) | `config/west.yml` |
+| 9 | [Cakerybdis 0 (no-LED) build](#9-cakerybdis-0-no-led-build) | `config/no_led/`, `config/ext_power/`, `build.yaml`, `boards/shields/charybdis_right_bt/charybdis_right_bt.conf` |
+| 10 | [Forked + pinned dependencies](#dependencies) | `config/west.yml` |
 
 ---
 
@@ -120,6 +121,24 @@ The behavior has global locality, so it runs on both halves. The peripheral (lef
 ## 8. Bluetooth-only builds
 
 Only the Bluetooth split (left peripheral, right central) is used, so the standard dongle and all Prospector display builds are commented out in `build.yaml`. Uncomment an entry to build it again. The Prospector module is still in `west.yml`, so those builds keep working if turned back on.
+
+## 9. Cakerybdis 0 (no-LED) build
+
+My second keyboard has no per-key LEDs and advertises as **`Cakerybdis 0`**. It is built by the `bt_no_led` entry in `build.yaml` (`firmware-bt_no_led-qwerty.zip`), or locally with `quick_build.sh` (see the README). Its right half needed three board-specific fixes, found by testing one variant at a time:
+
+| File | Applies to | What it does |
+|---|---|---|
+| `config/no_led/no_led.conf` | both halves | `CONFIG_CAKE_PER_KEY_LED=n` and `CONFIG_ZMK_KEYBOARD_NAME="Cakerybdis 0"`. `&kb_status` builds as a no-op, so the keymap is shared with Cakerybdis L. |
+| `config/no_led/trackball_rotate.overlay` | right half | The sensor is mounted 90 degrees from Cakerybdis L. It sets the sensor to `swap-xy`, then adds `&zip_xy_transform (XY_SWAP \| Y_INVERT)` at the front of the base, SLOW and SCROLL input-processor chains. Layer overrides replace the base chain, so each one needs it. |
+| `config/ext_power/ext_power.conf` | right half | `CONFIG_ZMK_EXT_POWER=y`, so ZMK drives `P0.13` high and switches the nice!nano's `VCC` output on. |
+
+**Trackball on battery.** The trackball worked on USB but was dead on battery, while the keys kept working. Once it was dead, it only came back after booting on USB with the battery switched off. Unplugging USB with the battery on could drop the whole right half, and Bluetooth typing lagged. The sensor runs off `VCC`, and `charybdis.conf` sets `CONFIG_ZMK_EXT_POWER=n`, so ZMK never drives the `VCC` switch and its state is left to the board's wiring. On this clone that doesn't hold up on battery. Driving `P0.13` high (`ext_power.conf`) fixed the trackball, the dropouts and the lag. These didn't help:
+- `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=500` on its own. It's kept anyway, because the driver initialises the sensor only once, 10 ms after boot, and `VCC` now switches on at boot with a 50 ms settle time.
+- `no_dcdc.overlay`. The regulators are fine on this board.
+
+The trade-off is extra deep-sleep current with `EXT_POWER` on (280Zo issue #17), so Cakerybdis L stays on `EXT_POWER=n`. If another clone shows the same symptoms, add `ext_power/ext_power.conf` to its build. On a board whose `VCC` switch is active-low (nice!nano v1 style), also override `EXT_POWER`'s `control-gpios` to `GPIO_ACTIVE_LOW`.
+
+**Axis debugging tip.** Test the trackball by reporting where the pointer goes for each of the four ball directions. One "rotated" or "inverted" description isn't enough to work out the mapping.
 
 ---
 

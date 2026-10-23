@@ -14,7 +14,7 @@
 | **Status LEDs (`&kb_status`)** | Hold the key (or tap it for 2 s) to show each half's battery level as a bar on its top row, the OS layer on the left thumbs (white = Mac, pink = Windows) and the active BT profile on the left home row (blue = connected, orange = paired but disconnected, purple = empty). |
 | **Bluetooth** | The right (central) half advertises as **`Cakerybdis L`**. Pairing fixes for Windows `LL_PROC_COLLISION` disconnects, passkey entry for Android (type the 6-digit code, then Enter), and a delayed request for a fast connection interval so the trackball doesn't lag on Windows. |
 | **Trackball** | Axis orientation changed to match how the sensor is mounted in this build (`invert-y` only). |
-| **No-LED build** | `bt_no_led`: per-key LEDs off and advertised as **`Cakerybdis 0`**, for my second keyboard, which has no LEDs. See [config/no_led/no_led.conf](config/no_led/no_led.conf). |
+| **No-LED build** | `bt_no_led`: per-key LEDs off and advertised as **`Cakerybdis 0`**, for my second keyboard, which has no LEDs. Its right half also has the trackball rotated 90° and VCC actively switched on. See [FORK.md](FORK.md#9-cakerybdis-0-no-led-build). |
 | **Faulty nice!nano builds** | Two extra variants for nice!nano clones with broken regulators: `bt_no_dcdc` (both regulators in LDO mode) and `bt_reg1_ldo` (left half, REG1 only). See [config/no_dcdc/README.md](config/no_dcdc/README.md). |
 | **Builds** | Only the Bluetooth split firmware is built. The dongle and Prospector display builds are commented out in [build.yaml](build.yaml) and can be turned back on there. A fast incremental local build is in [`local-build/quick_build.sh`](local-build/quick_build.sh) (see [Building locally](#building-locally)). |
 | **Dependencies** | ZMK, the PMW3610 trackball driver and the Prospector module are built from `cakerybdis-` forks, each pinned to an exact commit in [`config/west.yml`](config/west.yml). |
@@ -58,7 +58,7 @@ Each [release](https://github.com/maybecake/cakerybdis/releases) contains:
 | Keyboard | Bluetooth name | Firmware | Notes |
 |---|---|---|---|
 | LED keyboard | `Cakerybdis L` | `bt` (default config) | Left half has a faulty regulator: flash a `reg1_ldo` left half (or `no_dcdc` if that doesn't boot). |
-| No-LED keyboard | `Cakerybdis 0` | `bt_no_led` | |
+| No-LED keyboard | `Cakerybdis 0` | `bt_no_led` | Right half: trackball rotated 90° (`trackball_rotate.overlay`) and `CONFIG_ZMK_EXT_POWER=y` (`ext_power.conf`). |
 | Test right half | `chary_test` | local only: `quick_build.sh chary_test qwerty charybdis_right_bt -- chary_test/chary_test.conf` | No LEDs. |
 
 ## Building locally
@@ -75,7 +75,8 @@ docker run -d --name cakerybdis-builder --restart unless-stopped \
 
 # quick_build.sh <name> <keymap> <shield>... [-- <config-relative .conf/.overlay files>...]
 docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l qwerty charybdis_left_bt charybdis_right_bt
-docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt charybdis_right_bt -- no_led/no_led.conf
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt -- no_led/no_led.conf
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_right_bt -- no_led/no_led.conf ext_power/ext_power.conf no_led/trackball_rotate.overlay
 docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l_reg1_ldo qwerty charybdis_left_bt -- no_dcdc/reg1_ldo.overlay
 ```
 
@@ -93,7 +94,8 @@ docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l_reg1
 - **A BT profile won't connect (others do).** That profile still has a stale bond from an earlier pairing or an earlier name. Forget the keyboard on the host, then on the keyboard hold CONN, tap `BT_SEL n`, then `BT_CLR`, and pair again. `settings_reset.uf2` clears every profile at once.
 - **Renaming the keyboard.** Hosts cache the old name, so forget the device and re-pair. `CONFIG_BT_DEVICE_NAME_DYNAMIC=n` keeps a stored name from overriding the firmware's name.
 - **Trackball lags over Bluetooth on Windows but not on macOS.** macOS picks a fast connection interval by itself, but Windows keeps its slow default unless the keyboard asks for a faster one. The right half sends that request 5 s after every connection (`CONFIG_BT_CONN_PARAM_UPDATE_TIMEOUT`). It was briefly disabled to work around pairing collisions, which caused the lag. If the lag persists, check the PC's Bluetooth adapter, USB 3 interference near a dongle, and Windows power saving on the adapter.
-- **Trackball axes.** `invert-y` on the PMW3610 node is correct for both keyboards. Scroll direction is set separately in [`charybdis_pointer.dtsi`](config/trackball/charybdis_pointer.dtsi) (`INPUT_TRANSFORM_Y_INVERT` on the scroll layer).
+- **Trackball axes.** `invert-y` on the PMW3610 node is correct for Cakerybdis L. Cakerybdis 0's sensor is mounted rotated 90 degrees, so its right half uses [`trackball_rotate.overlay`](config/no_led/trackball_rotate.overlay) (`swap-xy`, no inversion). The overlay references `&trackball`, so pass it to the right half only.
+- **Trackball works on USB but not on battery (keys still work).** The trackball sensor runs off the nice!nano's switched `VCC` pin, which `P0.13` controls. `charybdis.conf` sets `CONFIG_ZMK_EXT_POWER=n` (less deep-sleep drain, 280Zo issue #17), so ZMK never drives that switch and `VCC` is left to the board's wiring. On Cakerybdis 0's right-half clone that didn't hold on battery: the trackball was dead unless the board booted on USB with the battery off, unplugging USB could drop the whole half, and Bluetooth typing lagged. [`ext_power.conf`](config/ext_power/ext_power.conf) (`CONFIG_ZMK_EXT_POWER=y`) fixed all three. The DC/DC regulators were not the cause: `no_dcdc.overlay` changed nothing. The PMW3610 driver also initialises the sensor only once, 10 ms after boot, so `CONFIG_PMW3610_ALT_INIT_POWER_UP_EXTRA_DELAY_MS=500` lets `VCC` settle first.
 - **Keymap changes don't show up after flashing.** Changes saved in ZMK Studio are stored in settings and override the compiled keymap. Flash `settings_reset.uf2` first.
 - **A half never starts (no USB, no BLE, but the bootloader works).** This usually means a faulty DC/DC regulator on a nice!nano clone. Try `reg1_ldo.overlay` first, then `no_dcdc.overlay`. See [config/no_dcdc/README.md](config/no_dcdc/README.md).
 - **No LEDs, `&kb_status` still in the keymap.** With `CONFIG_CAKE_PER_KEY_LED=n` the status behavior builds as a no-op, so the same keymap works for LED and no-LED boards.

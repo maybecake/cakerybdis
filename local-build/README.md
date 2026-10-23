@@ -47,7 +47,8 @@ docker run -d --name cakerybdis-builder --restart unless-stopped \
 # LED keyboard ("Cakerybdis L")
 docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_l qwerty charybdis_left_bt charybdis_right_bt
 # No-LED keyboard ("Cakerybdis 0")
-docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt charybdis_right_bt -- no_led/no_led.conf
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_left_bt -- no_led/no_led.conf
+docker exec cakerybdis-builder bash local-build/quick_build.sh cakerybdis_0 qwerty charybdis_right_bt -- no_led/no_led.conf ext_power/ext_power.conf no_led/trackball_rotate.overlay
 ```
 
 Files after `--` are relative to `config/`; `.overlay` files are passed as devicetree overlays, e.g. `-- no_dcdc/reg1_ldo.overlay` for a left half with a faulty REG1. Output goes to `firmwares/<name>/<name>_left.uf2` and `<name>_right.uf2`. The first build of a name takes several minutes; later builds only recompile what changed. Run `west update` yourself (`docker exec cakerybdis-builder west update`) after changing `config/west.yml`. Note that `build_setup.sh` empties `firmwares/` when it runs.
